@@ -32,11 +32,24 @@ function setup() {
   }
 }
 
+
+var randomColors =
+  [
+    '#3181a5', '#3139a5', '#a53131', '#5ea531', '#a53194',
+    '#8831a5', '#ed4eb0', '#ede24e', '#4ec8ed', '#7b4eed']
+
+var randomColor = randomColors[Math.floor((Math.random() * 10))]
+
+function changeColor() {
+  randomColor = randomColors[Math.floor((Math.random() * 10))]
+}
+
 function draw() {
-  background(0);
+  background(randomColor);
   for (var i = 0; i < numSegments - 1; i++) {
     line(xCor[i], yCor[i], xCor[i + 1], yCor[i + 1]);
   }
+
   updateSnakeCoordinates();
   checkGameStatus();
   checkForFruit();
@@ -90,6 +103,8 @@ function checkGameStatus() {
       yCor[yCor.length - 1] > height ||
       yCor[yCor.length - 1] < 0 ||
       checkSnakeCollision()) {
+    gameOverSound();
+    stopMusic();
     noLoop();
     var scoreVal = parseInt(scoreElem.html().substring(8));
     scoreElem.html('Game ended! Your score was : ' + scoreVal);
@@ -124,6 +139,8 @@ function checkForFruit() {
     yCor.unshift(yCor[0]);
     numSegments++;
     updateFruitCoordinates();
+    eatSound();
+    changeColor();
   }
 }
 
@@ -161,4 +178,52 @@ function keyPressed() {
       }
       break;
   }
+}
+
+
+Tone.Transport.start()
+const synth = new Tone.DuoSynth().toMaster()
+const seq = new Tone.Sequence((time, note) => {
+  synth.triggerAttackRelease(note, '8n', time)
+}, ['A3', 'C4', ['D4', 'E4'], 'C4', ['D4', 'E4'], 'F4', 'E4', 'D4', 'G3', ], '4n')
+
+function startMusic() {
+  seq.start();
+}
+
+function stopMusic() {
+  seq.stop();
+}
+
+
+// NOTE: eating sound
+function eatSound(event) {
+  var synth2 = new Tone.Synth(
+    {
+      envelope: {
+        attack : 0.01 ,
+        decay : 0.01 ,
+        sustain : 0.3 ,
+        release : 0.3,
+      }
+    }
+  ).toMaster()
+  synth2.triggerAttackRelease('E5', '16n')
+}
+
+
+// NOTE: game over sound
+function gameOverSound(event) {
+  console.log(event);
+  var synth3 = new Tone.Synth(
+    {
+      envelope: {
+        attack : 0.003 ,
+        decay : 0.1 ,
+        sustain : 0.3 ,
+        release : 0.5
+      }
+    }
+  ).toMaster()
+  synth3.triggerAttackRelease('A2', '8n')
 }
